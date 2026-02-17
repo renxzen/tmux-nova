@@ -14,6 +14,7 @@ nerdfonts_right=$(get_option "@nova-nerdfonts-right" )
 nerdfonts_left=$(get_option "@nova-nerdfonts-left" )
 rows=$(get_option "@nova-rows" 0)
 pane=$(get_option "@nova-pane" "#S:#I:#W")
+base_index=$(get_option "base-index" 0)
 
 #
 # Default segments
@@ -37,7 +38,7 @@ fi
 #
 
 interval=$(get_option "@nova-interval" 5)
-tmux set-option -g interval $interval
+tmux set-option -g status-interval $interval
 
 #
 # UI style
@@ -120,8 +121,15 @@ for segment in "${segments_left[@]}"; do
 done
 
 if [ $nerdfonts = true ]; then
+  # condition the separator if the last segment background matches the active window background
+  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
+    tmux set-option -ga status-left "#{?#{==:#{window_index},${base_index}},,"
+  fi
   tmux set-option -ga status-left "#[bg=${status_style_bg}]"
   tmux set-option -ga status-left "$nerdfonts_left"
+  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
+    tmux set-option -ga status-left "}"
+  fi
 fi
 
 #
@@ -132,8 +140,18 @@ pane_justify=$(get_option "@nova-pane-justify" "left")
 tmux set-option -g status-justify ${pane_justify}
 
 if [ $nerdfonts = true ]; then
-  tmux set-window-option -g window-status-current-format "#[fg=${status_style_bg},bg=${status_style_active_bg}]"
+  # condition the separator if the last segment background matches the active window background
+  # we start with -g to reset, then append
+  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
+    tmux set-window-option -g window-status-current-format "#{?#{==:#{window_index},${base_index}},,"
+    tmux set-window-option -ga window-status-current-format "#[fg=${status_style_bg},bg=${status_style_active_bg}]"
+  else
+    tmux set-window-option -g window-status-current-format "#[fg=${status_style_bg},bg=${status_style_active_bg}]"
+  fi
   tmux set-window-option -ga window-status-current-format "$nerdfonts_left"
+  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
+    tmux set-window-option -ga window-status-current-format "}"
+  fi
 fi
 
 tmux set-window-option -g window-status-format "#{?window_activity_flag,"
