@@ -155,6 +155,9 @@ tmux set-window-option -g window-status-format "#{?window_activity_flag,"
 tmux set-window-option -ga window-status-format "#[bg=$status_style_activity_fg#,fg=$status_style_bg],"
 tmux set-window-option -ga window-status-format "#[fg=$status_style_fg#,bg=$status_style_bg]}"
 
+# Add spacing before the first window
+tmux set-window-option -ga window-status-format "#{?#{==:#{window_index},${base_index}},${segment_spacing},}"
+
 if [ $nerdfonts = true ]; then
   tmux set-window-option -ga window-status-format "$(padding $(($padding + 1)))"
 else
