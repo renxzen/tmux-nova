@@ -13,7 +13,8 @@ nerdfonts=$(get_option "@nova-nerdfonts" false)
 nerdfonts_right=$(get_option "@nova-nerdfonts-right" )
 nerdfonts_left=$(get_option "@nova-nerdfonts-left" )
 nerdfonts_left_active=$(get_option "@nova-nerdfonts-left-active" "$nerdfonts_left")
-nerdfonts_left_active_inverse=$(get_option "@nova-nerdfonts-left-active-inverse" "false")
+nerdfonts_left_active_raw=$(tmux show-option -gqv "@nova-nerdfonts-left-active")
+segment_spacing=$(get_option "@nova-segment-spacing" " ")
 
 rows=$(get_option "@nova-rows" 0)
 pane=$(get_option "@nova-pane" "#S:#I:#W")
@@ -124,15 +125,8 @@ for segment in "${segments_left[@]}"; do
 done
 
 if [ $nerdfonts = true ]; then
-  # condition the separator if the last segment background matches the active window background
-  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
-    tmux set-option -ga status-left "#{?#{==:#{window_index},${base_index}},,"
-  fi
   tmux set-option -ga status-left "#[bg=${status_style_bg}]"
   tmux set-option -ga status-left "$nerdfonts_left"
-  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
-    tmux set-option -ga status-left "}"
-  fi
 fi
 
 #
@@ -143,21 +137,18 @@ pane_justify=$(get_option "@nova-pane-justify" "left")
 tmux set-option -g status-justify ${pane_justify}
 
 if [ $nerdfonts = true ]; then
-  if [ "$nerdfonts_left_active_inverse" == "true" ]; then
+  # If the user explicitly set the active separator, assume they want the "pill" style (inverse colors)
+  if [ -n "$nerdfonts_left_active_raw" ]; then
     tmux set-window-option -g window-status-current-format "#[fg=${status_style_active_bg},bg=${status_style_bg}]"
   else
+    # Otherwise, standard behavior (normal colors)
     tmux set-window-option -g window-status-current-format "#[fg=${status_style_bg},bg=${status_style_active_bg}]"
   fi
 
-  # condition the separator if the last segment background matches the active window background
-  # we start with -ga to append to the color set above
-  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
-    tmux set-window-option -ga window-status-current-format "#{?#{==:#{window_index},${base_index}},,"
-  fi
+  # Add spacing before the first window
+  tmux set-window-option -ga window-status-current-format "#{?#{==:#{window_index},${base_index}},${segment_spacing},}"
+
   tmux set-window-option -ga window-status-current-format "$nerdfonts_left_active"
-  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
-    tmux set-window-option -ga window-status-current-format "}"
-  fi
 fi
 
 tmux set-window-option -g window-status-format "#{?window_activity_flag,"
