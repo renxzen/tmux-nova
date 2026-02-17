@@ -13,6 +13,8 @@ nerdfonts=$(get_option "@nova-nerdfonts" false)
 nerdfonts_right=$(get_option "@nova-nerdfonts-right" )
 nerdfonts_left=$(get_option "@nova-nerdfonts-left" )
 nerdfonts_left_active=$(get_option "@nova-nerdfonts-left-active" "$nerdfonts_left")
+nerdfonts_left_active_inverse=$(get_option "@nova-nerdfonts-left-active-inverse" "false")
+
 rows=$(get_option "@nova-rows" 0)
 pane=$(get_option "@nova-pane" "#S:#I:#W")
 base_index=$(get_option "base-index" 0)
@@ -141,13 +143,16 @@ pane_justify=$(get_option "@nova-pane-justify" "left")
 tmux set-option -g status-justify ${pane_justify}
 
 if [ $nerdfonts = true ]; then
-  # condition the separator if the last segment background matches the active window background
-  # we start with -g to reset, then append
-  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
-    tmux set-window-option -g window-status-current-format "#{?#{==:#{window_index},${base_index}},,"
-    tmux set-window-option -ga window-status-current-format "#[fg=${status_style_bg},bg=${status_style_active_bg}]"
+  if [ "$nerdfonts_left_active_inverse" == "true" ]; then
+    tmux set-window-option -g window-status-current-format "#[fg=${status_style_active_bg},bg=${status_style_bg}]"
   else
     tmux set-window-option -g window-status-current-format "#[fg=${status_style_bg},bg=${status_style_active_bg}]"
+  fi
+
+  # condition the separator if the last segment background matches the active window background
+  # we start with -ga to append to the color set above
+  if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
+    tmux set-window-option -ga window-status-current-format "#{?#{==:#{window_index},${base_index}},,"
   fi
   tmux set-window-option -ga window-status-current-format "$nerdfonts_left_active"
   if [ "${segment_colors[0]}" == "$status_style_active_bg" ]; then
