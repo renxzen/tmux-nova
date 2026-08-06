@@ -3,7 +3,7 @@ export LC_ALL=en_US.UTF-8
 
 get_option() {
   local option=$(tmux show-option -gqv "$1")
-  [ -z $option ] && echo $2 || echo $option
+  [ -z "$option" ] && echo "$2" || echo "$option"
 }
 
 set_option() {
